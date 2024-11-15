@@ -3,14 +3,15 @@
 #include <math/Matrix4x4.h>
 #include <math/CalculateMath.h>
 
+#include <math/Quaternion.h>
+
 const char kWindowTitle[] = "LE2B_07_カミジ_トモユキ";
 
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix);
 void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);
-
-Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
+void QuaternionScreenPrintf(int x, int y, const Quaternion& quaternion, const char* label);
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -22,16 +23,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Vector3 from0 = Normalize(Vector3{ 1.0f,0.7f,0.5f });
-	Vector3 to0 = -from0;
-	Vector3 from1 = Normalize(Vector3{ -0.6f,0.9f,0.2f });
-	Vector3 to1 = Normalize(Vector3{ 0.4f,0.7f,-0.5f });
+	Quaternion q1 = { 2.0f,3.0f,4.0f,1.0f };
+	Quaternion q2 = { 1.0f,3.0f,5.0f,2.0f };
 
-	Matrix4x4 rotateMatrix0 = DirectionToDirection(
-		Normalize(Vector3{ 1.0f,0.0f,0.0f }), Normalize(Vector3{ -1.0f,0.0f,0.0f }));
-	Matrix4x4 rotateMatrix1 = DirectionToDirection(from0, to0);
-	Matrix4x4 rotateMatrix2 = DirectionToDirection(from1, to1);
-
+	Quaternion identity = Identity();
+	Quaternion conj = Conjugate(q1);
+	Quaternion inv = Inverse(q1);
+	Quaternion normal = Normalize(q1);
+	Quaternion mul1 = Multiply(q1, q2);
+	Quaternion mul2 = Multiply(q2, q1);
+	float norm = Norm(q1);
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -54,9 +55,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrintf(0, 0, rotateMatrix0);
-		MatrixScreenPrintf(0, kRowHeight * 5 + 10, rotateMatrix1);
-		MatrixScreenPrintf(0, kRowHeight * 10 + 20, rotateMatrix2);
+		QuaternionScreenPrintf(0, 0, identity, ": Identity");
+		QuaternionScreenPrintf(0, kRowHeight, conj, ": Conjugate");
+		QuaternionScreenPrintf(0, kRowHeight * 2, inv, ": Inverse");
+		QuaternionScreenPrintf(0, kRowHeight * 3, normal, ": Normalize");
+		QuaternionScreenPrintf(0, kRowHeight * 4, mul1, ": Multiply(q1,q2)");
+		QuaternionScreenPrintf(0, kRowHeight * 5, mul2, ": Multiply(q2,q1)");
+		Novice::ScreenPrintf(0, kRowHeight * 6, "%.2f : Norm", norm);
 
 		///
 		/// ↑描画処理ここまで
@@ -93,21 +98,13 @@ void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
 	Novice::ScreenPrintf(x + kColumnWidth * 2, y, "%.02f", vector.z);
 	Novice::ScreenPrintf(x + kColumnWidth * 3, y, "%s", label);
 }
-
-Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
-	Vector3 fromNorm = Normalize(from);
-	Vector3 toNorm = Normalize(to);
-
-	// 回転軸と角度の計算
-	Vector3 axis = Cross(fromNorm,toNorm);
-	float dot = Dot(fromNorm,toNorm);
-
-	// 回転角度を求める（通常のケース）
-	float angle = std::acos(dot);
-
-	// 回転軸を正規化
-	axis = Normalize(axis);
-
-	// 角度に基づいて回転行列を作成
-	return MakeRotateAxisAngle(axis, angle);
+void QuaternionScreenPrintf(int x, int y, const Quaternion& quaternion, const char* label)
+{
+	Novice::ScreenPrintf(x, y, "%.02f", quaternion.x);
+	Novice::ScreenPrintf(x + kColumnWidth, y, "%.02f", quaternion.y);
+	Novice::ScreenPrintf(x + kColumnWidth * 2, y, "%.02f", quaternion.z);
+	Novice::ScreenPrintf(x + kColumnWidth * 3, y, "%.02f", quaternion.w);
+	Novice::ScreenPrintf(x + kColumnWidth * 4, y, "%s", label);
 }
+
+

@@ -4,6 +4,7 @@
 #include "Matrix4x4.h"
 #include "assert.h"
 #include <cmath>
+#include "Quaternion.h"
 
 // 内積
 float Dot(const Vector3& v1, const Vector3& v2);
@@ -45,6 +46,8 @@ Matrix4x4 MakeIdentity4x4();
 
 // 任意軸回転行列
 Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
+// from -> to の回転行列
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
 
 
 // -----座標系-----
@@ -56,3 +59,17 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 // 座標変換
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
+
+// --- Quaternion(仮) ---
+// 積
+Quaternion Multiply(const Quaternion& Left, const Quaternion& Right);
+// 単位Quaternion
+Quaternion Identity();
+// 共役Quaternion
+Quaternion Conjugate(const Quaternion& quaternion);
+// Norm
+float Norm(const Quaternion& quaternion);
+// 正規化Quaternion
+Quaternion Normalize(const Quaternion& quaternion);
+// 逆Quaternion
+Quaternion Inverse(const Quaternion& quaternion);

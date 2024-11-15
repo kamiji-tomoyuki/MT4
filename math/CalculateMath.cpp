@@ -330,6 +330,24 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle)
 
 	return rotationMatrix;
 }
+// from -> to の回転行列
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
+	Vector3 fromNorm = Normalize(from);
+	Vector3 toNorm = Normalize(to);
+
+	// 回転軸と角度の計算
+	Vector3 axis = Cross(fromNorm, toNorm);
+	float dot = Dot(fromNorm, toNorm);
+
+	// 回転角度を求める（通常のケース）
+	float angle = std::acos(dot);
+
+	// 回転軸を正規化
+	axis = Normalize(axis);
+
+	// 角度に基づいて回転行列を作成
+	return MakeRotateAxisAngle(axis, angle);
+}
 
 
 // -----座標系-----
@@ -366,5 +384,66 @@ Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	result.x /= w;
 	result.y /= w;
 	result.z /= w;
+	return result;
+}
+
+
+Quaternion Multiply(const Quaternion& Left, const Quaternion& Right)
+{
+	Quaternion result;
+	result.w = Left.w * Right.w - Left.x * Right.x - Left.y * Right.y - Left.z * Right.z;
+	result.x = Left.w * Right.x + Left.x * Right.w + Left.y * Right.z - Left.z * Right.y;
+	result.y = Left.w * Right.y + Left.y * Right.w + Left.z * Right.x - Left.x * Right.z;
+	result.z = Left.w * Right.z + Left.z * Right.w + Left.x * Right.y - Left.y * Right.x;
+	return result;
+}
+
+Quaternion Identity()
+{
+	Quaternion result;
+	result.x = 0.0f;
+	result.y = 0.0f;
+	result.z = 0.0f;
+	result.w = 1.0f;
+	return result;
+}
+
+Quaternion Conjugate(const Quaternion& quaternion)
+{
+	Quaternion result;
+	result.x = -quaternion.x;
+	result.y = -quaternion.y;
+	result.z = -quaternion.z;
+	result.w = quaternion.w;
+	return result;
+}
+
+float Norm(const Quaternion& quaternion)
+{
+	return std::sqrt(quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z + quaternion.w * quaternion.w);
+}
+
+Quaternion Normalize(const Quaternion& quaternion)
+{
+	float norm = Norm(quaternion);
+	float invNorm = (norm > 0.0f) ? 1.0f / std::sqrt(norm) : 0.0f;
+	Quaternion result;
+	result.x = quaternion.x * invNorm;
+	result.y = quaternion.y * invNorm;
+	result.z = quaternion.z * invNorm;
+	result.w = quaternion.w * invNorm;
+	return result;
+}
+
+Quaternion Inverse(const Quaternion& quaternion)
+{
+	Quaternion conjugate = Conjugate(quaternion);
+	float norm = Norm(quaternion);
+	float invNorm = (norm > 0.0f) ? 1.0f / norm : 0.0f;
+	Quaternion result;
+	result.x = conjugate.x * invNorm;
+	result.y = conjugate.y * invNorm;
+	result.z = conjugate.z * invNorm;
+	result.w = conjugate.w * invNorm;
 	return result;
 }
