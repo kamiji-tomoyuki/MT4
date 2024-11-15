@@ -68,6 +68,20 @@ Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	}
 	return result;
 }
+Vector3 Multiply(const Vector3& vec, const Matrix4x4& mat) {
+	Vector3 result;
+	result.x = mat.m[0][0] * vec.x + mat.m[0][1] * vec.y + mat.m[0][2] * vec.z + mat.m[0][3] * 1.0f;
+	result.y = mat.m[1][0] * vec.x + mat.m[1][1] * vec.y + mat.m[1][2] * vec.z + mat.m[1][3] * 1.0f;
+	result.z = mat.m[2][0] * vec.x + mat.m[2][1] * vec.y + mat.m[2][2] * vec.z + mat.m[2][3] * 1.0f;
+	// 念のため、w成分も計算して確認
+	float w = mat.m[3][0] * vec.x + mat.m[3][1] * vec.y + mat.m[3][2] * vec.z + mat.m[3][3] * 1.0f;
+	if (w != 1.0f) {
+		result.x /= w;
+		result.y /= w;
+		result.z /= w;
+	}
+	return result;
+}
 
 // 平行移動行列
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
@@ -279,25 +293,44 @@ Matrix4x4 MakeIdentity4x4() {
 	return result;
 }
 
-Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
-	return { 2.0f / (right - left),           0,   0, 0, 0, 2.0f / (top - bottom), 0, 0, 0, 0, 1.0f / (farClip - nearClip), 0, (left + right) / (left - right), (top + bottom) / (bottom - top),
-			nearClip / (nearClip - farClip), 1.0f };
-};
-// vec * mat
-Vector3 Multiply(const Vector3& vec, const Matrix4x4& mat) {
-	Vector3 result;
-	result.x = mat.m[0][0] * vec.x + mat.m[0][1] * vec.y + mat.m[0][2] * vec.z + mat.m[0][3] * 1.0f;
-	result.y = mat.m[1][0] * vec.x + mat.m[1][1] * vec.y + mat.m[1][2] * vec.z + mat.m[1][3] * 1.0f;
-	result.z = mat.m[2][0] * vec.x + mat.m[2][1] * vec.y + mat.m[2][2] * vec.z + mat.m[2][3] * 1.0f;
-	// 念のため、w成分も計算して確認
-	float w = mat.m[3][0] * vec.x + mat.m[3][1] * vec.y + mat.m[3][2] * vec.z + mat.m[3][3] * 1.0f;
-	if (w != 1.0f) {
-		result.x /= w;
-		result.y /= w;
-		result.z /= w;
-	}
-	return result;
+// 任意軸回転行列
+Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle)
+{
+	Vector3 normalizedAxis = axis;
+
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+	float oneMinusC = 1.0f - c;
+
+	float x = normalizedAxis.x;
+	float y = normalizedAxis.y;
+	float z = normalizedAxis.z;
+
+	Matrix4x4 rotationMatrix;
+
+	rotationMatrix.m[0][0] = c + x * x * oneMinusC;
+	rotationMatrix.m[0][1] = x * y * oneMinusC + z * s;
+	rotationMatrix.m[0][2] = x * z * oneMinusC - y * s;
+	rotationMatrix.m[0][3] = 0.0f;
+
+	rotationMatrix.m[1][0] = y * x * oneMinusC - z * s;
+	rotationMatrix.m[1][1] = c + y * y * oneMinusC;
+	rotationMatrix.m[1][2] = y * z * oneMinusC + x * s;
+	rotationMatrix.m[1][3] = 0.0f;
+
+	rotationMatrix.m[2][0] = z * x * oneMinusC + y * s;
+	rotationMatrix.m[2][1] = z * y * oneMinusC - x * s;
+	rotationMatrix.m[2][2] = c + z * z * oneMinusC;
+	rotationMatrix.m[2][3] = 0.0f;
+
+	rotationMatrix.m[3][0] = 0.0f;
+	rotationMatrix.m[3][1] = 0.0f;
+	rotationMatrix.m[3][2] = 0.0f;
+	rotationMatrix.m[3][3] = 1.0f;
+
+	return rotationMatrix;
 }
+
 
 // -----座標系-----
 // 透視投影行列
@@ -310,6 +343,11 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 
 	return result;
 }
+// 正射影行列
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+	return { 2.0f / (right - left),           0,   0, 0, 0, 2.0f / (top - bottom), 0, 0, 0, 0, 1.0f / (farClip - nearClip), 0, (left + right) / (left - right), (top + bottom) / (bottom - top),
+			nearClip / (nearClip - farClip), 1.0f };
+};
 // ビューポート変換行列
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
 	Matrix4x4 result;

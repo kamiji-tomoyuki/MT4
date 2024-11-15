@@ -10,7 +10,7 @@ static const int kColumnWidth = 60;
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix);
 void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);
 
-Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -22,10 +22,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Vector3 axis = Normalize({ 1.0f,1.0f,1.0f });
-	float angle = 0.44f;
-	Matrix4x4 rotateMatrix = MakeRotateAxisAngle(axis, angle);
-	
+	Vector3 from0 = Normalize(Vector3{ 1.0f,0.7f,0.5f });
+	Vector3 to0 = -from0;
+	Vector3 from1 = Normalize(Vector3{ -0.6f,0.9f,0.2f });
+	Vector3 to1 = Normalize(Vector3{ 0.4f,0.7f,-0.5f });
+
+	Matrix4x4 rotateMatrix0 = DirectionToDirection(
+		Normalize(Vector3{ 1.0f,0.0f,0.0f }), Normalize(Vector3{ -1.0f,0.0f,0.0f }));
+	Matrix4x4 rotateMatrix1 = DirectionToDirection(from0, to0);
+	Matrix4x4 rotateMatrix2 = DirectionToDirection(from1, to1);
+
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -47,7 +54,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrintf(0, 0, rotateMatrix);
+		MatrixScreenPrintf(0, 0, rotateMatrix0);
+		MatrixScreenPrintf(0, kRowHeight * 5 + 10, rotateMatrix1);
+		MatrixScreenPrintf(0, kRowHeight * 10 + 20, rotateMatrix2);
 
 		///
 		/// ↑描画処理ここまで
@@ -85,46 +94,20 @@ void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label)
 	Novice::ScreenPrintf(x + kColumnWidth * 3, y, "%s", label);
 }
 
-Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle)
-{
-	Vector3 normalizedAxis = axis;
-	// 軸の正規化
-	float length = std::sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
-	if (length != 0.0f) {
-		normalizedAxis.x /= length;
-		normalizedAxis.y /= length;
-		normalizedAxis.z /= length;
-	}
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
+	Vector3 fromNorm = Normalize(from);
+	Vector3 toNorm = Normalize(to);
 
-	float c = std::cos(angle);
-	float s = std::sin(angle);
-	float oneMinusC = 1.0f - c;
+	// 回転軸と角度の計算
+	Vector3 axis = Cross(fromNorm,toNorm);
+	float dot = Dot(fromNorm,toNorm);
 
-	float x = normalizedAxis.x;
-	float y = normalizedAxis.y;
-	float z = normalizedAxis.z;
+	// 回転角度を求める（通常のケース）
+	float angle = std::acos(dot);
 
-	Matrix4x4 rotationMatrix;
+	// 回転軸を正規化
+	axis = Normalize(axis);
 
-	rotationMatrix.m[0][0] = c + x * x * oneMinusC;
-	rotationMatrix.m[0][1] = x * y * oneMinusC + z * s;
-	rotationMatrix.m[0][2] = x * z * oneMinusC - y * s;
-	rotationMatrix.m[0][3] = 0.0f;
-
-	rotationMatrix.m[1][0] = y * x * oneMinusC - z * s;
-	rotationMatrix.m[1][1] = c + y * y * oneMinusC;
-	rotationMatrix.m[1][2] = y * z * oneMinusC + x * s;
-	rotationMatrix.m[1][3] = 0.0f;
-
-	rotationMatrix.m[2][0] = z * x * oneMinusC + y * s;
-	rotationMatrix.m[2][1] = z * y * oneMinusC - x * s;
-	rotationMatrix.m[2][2] = c + z * z * oneMinusC;
-	rotationMatrix.m[2][3] = 0.0f;
-
-	rotationMatrix.m[3][0] = 0.0f;
-	rotationMatrix.m[3][1] = 0.0f;
-	rotationMatrix.m[3][2] = 0.0f;
-	rotationMatrix.m[3][3] = 1.0f;
-
-	return rotationMatrix;
+	// 角度に基づいて回転行列を作成
+	return MakeRotateAxisAngle(axis, angle);
 }

@@ -43,6 +43,9 @@ Matrix4x4 Transpose(const Matrix4x4& m);
 // 単位行列の作成
 Matrix4x4 MakeIdentity4x4();
 
+// 任意軸回転行列
+Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
+
 
 // -----座標系-----
 // 透視投影行列
