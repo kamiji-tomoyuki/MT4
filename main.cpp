@@ -107,17 +107,17 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle)
 	Matrix4x4 rotationMatrix;
 
 	rotationMatrix.m[0][0] = c + x * x * oneMinusC;
-	rotationMatrix.m[0][1] = x * y * oneMinusC - z * s;
-	rotationMatrix.m[0][2] = x * z * oneMinusC + y * s;
+	rotationMatrix.m[0][1] = x * y * oneMinusC + z * s;
+	rotationMatrix.m[0][2] = x * z * oneMinusC - y * s;
 	rotationMatrix.m[0][3] = 0.0f;
 
-	rotationMatrix.m[1][0] = y * x * oneMinusC + z * s;
+	rotationMatrix.m[1][0] = y * x * oneMinusC - z * s;
 	rotationMatrix.m[1][1] = c + y * y * oneMinusC;
-	rotationMatrix.m[1][2] = y * z * oneMinusC - x * s;
+	rotationMatrix.m[1][2] = y * z * oneMinusC + x * s;
 	rotationMatrix.m[1][3] = 0.0f;
 
-	rotationMatrix.m[2][0] = z * x * oneMinusC - y * s;
-	rotationMatrix.m[2][1] = z * y * oneMinusC + x * s;
+	rotationMatrix.m[2][0] = z * x * oneMinusC + y * s;
+	rotationMatrix.m[2][1] = z * y * oneMinusC - x * s;
 	rotationMatrix.m[2][2] = c + z * z * oneMinusC;
 	rotationMatrix.m[2][3] = 0.0f;
 
